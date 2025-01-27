@@ -177,7 +177,15 @@ jobs:
           
           echo "Building the kernel..."
           rm -rf ./kernel_platform/common/android/abi_gki_protected_exports_*
-          ./kernel_platform/oplus/build/oplus_build_kernel.sh kalama gki
+          ./kernel_platform/oplus/build/oplus_build_kernel.sh kalama gki &
+          CMD_PID=$!
+          while kill -0 $CMD_PID 2>/dev/null; do
+              echo "Memory Usage:"
+              free -h
+              echo "Disk Usage:"
+              df -h
+              sleep 10
+          done
 
       - name: Create Bootimgs Folder and Copy Images
         run: |
