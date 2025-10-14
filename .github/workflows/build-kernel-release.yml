@@ -21,9 +21,7 @@ on:
         description: "Compiler optimization level"
         required: true
         type: choice
-        options:
-          - O2
-          - O3
+        options: [O2, O3]
         default: O2
       android12-5_10_susfs_branch_or_commit:
         description: 'Enter SusFS Branch or commit hash for android12-5.10'
@@ -51,56 +49,46 @@ on:
         default: ''
 
 jobs:
-  build-batch-1:
-    name: build-batch-1 (${{ matrix.model }}, ${{ matrix.soc }}, ${{ matrix.branch }}, ${{ matrix.manifest }}, ${{ matrix.android_version }}, ${{ matrix.kernel_version }}, ${{ inputs.ksun_branch }})
+  build:
+    name: build (${{ matrix.model }}, ${{ matrix.soc }}, ${{ matrix.branch }}, ${{ matrix.manifest }}, ${{ matrix.android_version }}, ${{ matrix.kernel_version }}, ${{ inputs.ksun_branch }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - model: OP11
-            soc: kalama
-            branch: oneplus/sm8550
-            manifest: oneplus_11_v.xml
-            android_version: android13
-            kernel_version: '5.15'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Select Appropriate SusFS Branch
-        id: get-susfs-branch
-        run: |
-          KERNEL_STRING="${{ matrix.android_version }}-${{ matrix.kernel_version }}"
-          
-          SUSFS_BRANCH=""
+        - model: OP11
+          soc: kalama
+          branch: oneplus/sm8550
+          manifest: oneplus_11_v.xml
+          android_version: android13
+          kernel_version: '5.15'
 
-          case "$KERNEL_STRING" in
-            "android12-5.10")
-              SUSFS_BRANCH="${{ inputs.android12-5_10_susfs_branch_or_commit }}"
-              ;;
-            "android13-5.10")
-              SUSFS_BRANCH="${{ inputs.android13-5_10_susfs_branch_or_commit }}"
-              ;;
-            "android13-5.15")
-              SUSFS_BRANCH="${{ inputs.android13-5_15_susfs_branch_or_commit }}"
-              ;;
-            "android14-5.15")
-              SUSFS_BRANCH="${{ inputs.android14-5_15_susfs_branch_or_commit }}"
-              ;;
-            "android14-6.1")
-              SUSFS_BRANCH="${{ inputs.android14-6_1_susfs_branch_or_commit }}"
-              ;;
-            "android15-6.6")
-              SUSFS_BRANCH="${{ inputs.android15-6_6_susfs_branch_or_commit }}"
-              ;;
-            *)
-              echo "Invalid kernel version or unsupported: $KERNEL_STRING"
-              exit 1
-              ;;
-          esac
-          
-          echo "susfs_branch=$SUSFS_BRANCH" >> $GITHUB_OUTPUT
+    steps:
+      - name: Resolve SUSFS branch from inputs
+        id: susfs
+        shell: bash
+        run: |
+          set -euo pipefail
+          key="${{ matrix.android_version }}-${{ matrix.kernel_version }}"
+          declare -A map=(
+            ["android12-5.10"]="${{ inputs.android12-5_10_susfs_branch_or_commit }}"
+            ["android13-5.10"]="${{ inputs.android13-5_10_susfs_branch_or_commit }}"
+            ["android13-5.15"]="${{ inputs.android13-5_15_susfs_branch_or_commit }}"
+            ["android14-5.15"]="${{ inputs.android14-5_15_susfs_branch_or_commit }}"
+            ["android14-6.1"]="${{ inputs.android14-6_1_susfs_branch_or_commit }}"
+            ["android15-6.6"]="${{ inputs.android15-6_6_susfs_branch_or_commit }}"
+          )
+          # Only validate mapping presence; allow empty string value to be passed through.
+          if [[ -z "${map[$key]+_exists}" ]]; then
+            echo "Unsupported combo (no mapping): $key" >&2
+            exit 1
+          fi
+          echo "susfs_branch=${map[$key]}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Build Kernel
         uses: WildKernels/OnePlus_KernelSU_SUSFS/.github/actions@main
@@ -110,21 +98,20 @@ jobs:
           branch: ${{ matrix.branch }}
           manifest: ${{ matrix.manifest }}
           ksun_branch: ${{ inputs.ksun_branch }}
-          susfs_commit_hash_or_branch: ${{ steps.get-susfs-branch.outputs.susfs_branch }}
+          susfs_commit_hash_or_branch: ${{ steps.susfs.outputs.susfs_branch }}
           optimize_level: ${{ inputs.optimize_level }}
 
   trigger-release:
-    needs:
-      - build-batch-1
+    needs: [build]
     runs-on: ubuntu-latest
     if: ${{ inputs.make_release }}
     env:
       REPO_OWNER: ${{ github.repository_owner }}
       REPO_NAME: ${{ github.event.repository.name }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_NAME: '*TEST BUILD* OnePlus Kernels With KernelSU Next & SUSFS v1.5.11 *TEST BUILD*'
+      RELEASE_NAME: '*TEST BUILD* OnePlus Kernels With KernelSU Next & SUSFS v1.5.12 *TEST BUILD*'
       RELEASE_NOTES: |
-        This release contains KernelSU Next and SUSFS v1.5.11
+        This release contains KernelSU Next and SUSFS v1.5.12
         
         Module: 
         -> https://github.com/sidex15/ksu_module_susfs
@@ -134,7 +121,7 @@ jobs:
 
         Features:
         [+] KernelSU-Next / WildKSU Manager Support
-        [+] SUSFS v1.5.11
+        [+] SUSFS v1.5.12
         [+] Wireguard Support
         [+] Magic Mount Support
         [+] Ptrace message leak fix for kernels < 5.16
@@ -143,6 +130,7 @@ jobs:
         [+] BBR v1 Support.
         [+] HMBIRD scx support for OnePlus 13 & OnePlus Ace 5 Pro.
         [+] Baseband Guard Support (BBG).
+        [+] xx_maps hide.
 
     steps:
       - name: Checkout code
@@ -150,7 +138,7 @@ jobs:
 
       - name: Generate and Create New Tag
         run: |
-          BASE_TAG="v1.5.11-r0"
+          BASE_TAG="v1.5.12-r0"
           LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
           if [ -z "$LATEST_TAG" ]; then
             LATEST_TAG="$BASE_TAG"
