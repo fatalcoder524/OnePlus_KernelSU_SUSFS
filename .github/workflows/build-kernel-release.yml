@@ -12,6 +12,38 @@ on:
         required: true
         type: boolean
         default: false
+      op_model:
+        description: 'Select the OnePlus kernel to build'
+        required: true
+        type: choice
+        options:
+          - OP13-GLO
+          - OP13-CN
+          - OP13r
+          - OP13S
+          - OP13T
+          - OP12
+          - OP12r
+          - OP11
+          - OP11r
+          - OP10pro
+          - OP10t
+          - OP-Nord-5
+          - OP-NORD-4
+          - OP-Nord-4-CE
+          - OP-Nord-CE4-LITE
+          - OPAce5Pro
+          - OP-ACE-5
+          - OP-Ace3-Pro
+          - OP-ACE-3V
+          - OP-ACE-2-PRO
+          - OP-ACE-2
+          - OP-OPEN
+          - OP-PAD-3
+          - OP-PAD-2-PRO
+          - OP-PAD-2
+          - OP-PAD-Pro
+        default: OP11
       ksun_branch:
         description: 'Enter KernelSU Next Branch or commit hash (blank for stable tag)'
         required: true
@@ -49,27 +81,247 @@ on:
         default: ''
 
 jobs:
-  build:
-    name: build (${{ matrix.model }}, ${{ matrix.soc }}, ${{ matrix.branch }}, ${{ matrix.manifest }}, ${{ matrix.android_version }}, ${{ matrix.kernel_version }}, ${{ inputs.ksun_branch }})
+  model-config:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - model: OP11
-          soc: kalama
-          branch: oneplus/sm8550
-          manifest: oneplus_11_v.xml
-          android_version: android13
-          kernel_version: '5.15'
+    outputs:
+      model: ${{ steps.get-op-model.outputs.model }}
+      soc: ${{ steps.get-op-model.outputs.soc }}
+      branch: ${{ steps.get-op-model.outputs.branch }}
+      manifest: ${{ steps.get-op-model.outputs.manifest }}
+      android_version: ${{ steps.get-op-model.outputs.android_version }}
+      kernel_version: ${{ steps.get-op-model.outputs.kernel_version }}
+    steps:
+      - name: Select OnePlus Model
+        id: get-op-model
+        run: |
+          MODEL="${{ inputs.op_model }}"
+          
+          case "$MODEL" in
+            "OP13-GLO")
+              echo "model=OP13-GLO" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_13_global.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP13-CN")
+              echo "model=OP13-CN" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_13.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP13r")
+              echo "model=OP13r" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8650" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_13r.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP13S")
+              echo "model=OP13S" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_13s.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP13T")
+              echo "model=OP13T" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_13t.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP12")
+              echo "model=OP12" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8650" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus12_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP12r")
+              echo "model=OP12r" >> $GITHUB_OUTPUT
+              echo "soc=kalama" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8550" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_12r_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android13" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.15" >> $GITHUB_OUTPUT
+              ;;
+            "OP11")
+              echo "model=OP11" >> $GITHUB_OUTPUT
+              echo "soc=kalama" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8550" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_11_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android13" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.15" >> $GITHUB_OUTPUT
+              ;;
+            "OP11r")
+              echo "model=OP11r" >> $GITHUB_OUTPUT
+              echo "soc=waipio" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8475" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_11r_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android12" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.10" >> $GITHUB_OUTPUT
+              ;;
+            "OP10pro")
+              echo "model=OP10pro" >> $GITHUB_OUTPUT
+              echo "soc=waipio" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8450" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_10_pro_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android12" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.10" >> $GITHUB_OUTPUT
+              ;;
+            "OP10t")
+              echo "model=OP10t" >> $GITHUB_OUTPUT
+              echo "soc=waipio" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8475" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_10t_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android12" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.10" >> $GITHUB_OUTPUT
+              ;;
+            "OP-Nord-5")
+              echo "model=OP-Nord-5" >> $GITHUB_OUTPUT
+              echo "soc=cliffs" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8635" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_nord_5.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP-NORD-4")
+              echo "model=OP-NORD-4" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm7675" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_nord_4_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP-Nord-4-CE")
+              echo "model=OP-Nord-4-CE" >> $GITHUB_OUTPUT
+              echo "soc=crow" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm7550" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_nord_ce4_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android13" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.15" >> $GITHUB_OUTPUT
+              ;;
+            "OP-Nord-CE4-LITE")
+              echo "model=OP-Nord-CE4-LITE" >> $GITHUB_OUTPUT
+              echo "soc=blair" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm6375" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_nord_ce4_lite_5g_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OPAce5Pro")
+              echo "model=OPAce5Pro" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_ace5_pro.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP-ACE-5")
+              echo "model=OP-ACE-5" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8650" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_ace5.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP-Ace3-Pro")
+              echo "model=OP-Ace3-Pro" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8650" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_ace3_pro_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP-ACE-3V")
+              echo "model=OP-ACE-3V" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm7675" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_ace_3v_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP-ACE-2-PRO")
+              echo "model=OP-ACE-2-PRO" >> $GITHUB_OUTPUT
+              echo "soc=kalama" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8550" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_ace2_pro_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android13" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.15" >> $GITHUB_OUTPUT
+              ;;
+            "OP-ACE-2")
+              echo "model=OP-ACE-2" >> $GITHUB_OUTPUT
+              echo "soc=waipio" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8475" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_ace2_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android12" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.10" >> $GITHUB_OUTPUT
+              ;;
+            "OP-OPEN")
+              echo "model=OP-OPEN" >> $GITHUB_OUTPUT
+              echo "soc=kalama" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8550" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_open_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android13" >> $GITHUB_OUTPUT
+              echo "kernel_version=5.15" >> $GITHUB_OUTPUT
+              ;;
+            "OP-PAD-3")
+              echo "model=OP-PAD-3" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_pad_3.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP-PAD-2-PRO")
+              echo "model=OP-PAD-2-PRO" >> $GITHUB_OUTPUT
+              echo "soc=sun" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8750" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_pad_2_pro.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android15" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.6" >> $GITHUB_OUTPUT
+              ;;
+            "OP-PAD-2")
+              echo "model=OP-PAD-2" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8650" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_pad2_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            "OP-PAD-Pro")
+              echo "model=OP-PAD-Pro" >> $GITHUB_OUTPUT
+              echo "soc=pineapple" >> $GITHUB_OUTPUT
+              echo "branch=oneplus/sm8650" >> $GITHUB_OUTPUT
+              echo "manifest=oneplus_pad_pro_v.xml" >> $GITHUB_OUTPUT
+              echo "android_version=android14" >> $GITHUB_OUTPUT
+              echo "kernel_version=6.1" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "Invalid or unsupported model: $MODEL"
+              exit 1
+              ;;
+          esac
 
+  build:
+    needs: model-config
+    name: build (${{ needs.model-config.outputs.model }}, ${{ needs.model-config.outputs.soc }}, ${{ needs.model-config.outputs.branch }}, ${{ needs.model-config.outputs.manifest }}, ${{ needs.model-config.outputs.android_version }}, ${{ needs.model-config.outputs.kernel_version }}, ${{ inputs.ksun_branch }})
+    runs-on: ubuntu-latest
     steps:
       - name: Resolve SUSFS branch from inputs
         id: susfs
         shell: bash
         run: |
           set -euo pipefail
-          key="${{ matrix.android_version }}-${{ matrix.kernel_version }}"
+          key="${{ needs.model-config.outputs.android_version }}-${{ needs.model-config.outputs.kernel_version }}"
           declare -A map=(
             ["android12-5.10"]="${{ inputs.android12-5_10_susfs_branch_or_commit }}"
             ["android13-5.10"]="${{ inputs.android13-5_10_susfs_branch_or_commit }}"
@@ -93,10 +345,10 @@ jobs:
       - name: Build Kernel
         uses: WildKernels/OnePlus_KernelSU_SUSFS/.github/actions@main
         with:
-          model: ${{ matrix.model }}
-          soc: ${{ matrix.soc }}
-          branch: ${{ matrix.branch }}
-          manifest: ${{ matrix.manifest }}
+          model: ${{ needs.model-config.outputs.model }}
+          soc: ${{ needs.model-config.outputs.soc }}
+          branch: ${{ needs.model-config.outputs.branch }}
+          manifest: ${{ needs.model-config.outputs.manifest }}
           ksun_branch: ${{ inputs.ksun_branch }}
           susfs_commit_hash_or_branch: ${{ steps.susfs.outputs.susfs_branch }}
           optimize_level: ${{ inputs.optimize_level }}
