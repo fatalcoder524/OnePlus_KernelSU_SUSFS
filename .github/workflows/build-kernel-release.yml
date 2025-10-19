@@ -114,16 +114,7 @@ jobs:
             model="${models[$i]}"
             file="configs/$model.json"
             if [ -f "$file" ]; then
-              jq -r --arg model "$model" '
-                {
-                  model: $model,
-                  soc: .soc,
-                  branch: .branch,
-                  manifest: .manifest,
-                  android_version: .android_version,
-                  kernel_version: .kernel_version
-                }
-              ' "$file" >> matrix.json
+              jq -r '.' "$file" >> matrix.json
               if [ $((i+1)) -lt ${#models[@]} ]; then
                 echo "," >> matrix.json
               fi
@@ -177,10 +168,7 @@ jobs:
       - name: Build Kernel
         uses: WildKernels/OnePlus_KernelSU_SUSFS/.github/actions@main
         with:
-          model: ${{ matrix.model }}
-          soc: ${{ matrix.soc }}
-          branch: ${{ matrix.branch }}
-          manifest: ${{ matrix.manifest }}
+          op_config_json: ${{ toJSON(matrix) }}
           ksun_branch: ${{ inputs.ksun_branch }}
           susfs_commit_hash_or_branch: ${{ steps.susfs.outputs.susfs_branch }}
           optimize_level: ${{ inputs.optimize_level }}
