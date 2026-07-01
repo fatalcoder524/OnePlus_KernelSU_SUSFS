@@ -209,7 +209,7 @@ jobs:
             KSU_REPO_OWNER="KernelSU-Next"
             KSU_REPO_NAME="KernelSU-Next"
           else
-            KSU_REPO_OWNER="tiann"
+            KSU_REPO_OWNER="backslashxx"
             KSU_REPO_NAME="KernelSU"
           fi
           
