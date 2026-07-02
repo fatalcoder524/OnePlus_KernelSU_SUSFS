@@ -6,12 +6,6 @@ permissions:
   
 on:
   workflow_dispatch:
-    inputs:
-      make_release:
-        description: 'Do you want to create a release?'
-        required: true
-        type: boolean
-        default: true
 
 jobs:
   build-kernel-op11:
@@ -21,19 +15,9 @@ jobs:
       model: "OP11"
       soc: "kalama"
       branch: "oneplus/sm8550"
-      manifest: "oneplus_11_v.xml"
+      manifest: "oneplus_11_b.xml"
       android_version: "android13"
       kernel_version: "5.15"
-  build-kernel-op11r:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP11r"
-      soc: "waipio"
-      branch: "oneplus/sm8475"
-      manifest: "oneplus_11r_v.xml"
-      android_version: "android13"
-      kernel_version: "5.10"
   build-kernel-op12:
     uses: ./.github/workflows/build.yml
     secrets: inherit
@@ -41,190 +25,6 @@ jobs:
       model: "OP12"
       soc: "pineapple"
       branch: "oneplus/sm8650"
-      manifest: "oneplus12_v.xml"
+      manifest: "oneplus_12_b.xml"
       android_version: "android14"
       kernel_version: "6.1"
-  build-kernel-op13r:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP13r"
-      soc: "pineapple"
-      branch: "oneplus/sm8650"
-      manifest: "oneplus_13r.xml"
-      android_version: "android14"
-      kernel_version: "6.1"
-  build-kernel-opnord4:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP-NORD-4"
-      soc: "pineapple"
-      branch: "oneplus/sm7675"
-      manifest: "oneplus_nord_4_v.xml"
-      android_version: "android14"
-      kernel_version: "6.1"
-  build-kernel-opopen:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP-OPEN"
-      soc: "kalama"
-      branch: "oneplus/sm8550"
-      manifest: "oneplus_open_v.xml"
-      android_version: "android13"
-      kernel_version: "5.15"
-  build-kernel-opace2:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP-ACE-2"
-      soc: "waipio"
-      branch: "oneplus/sm8475"
-      manifest: "oneplus_ace2_v.xml"
-      android_version: "android13"
-      kernel_version: "5.10"
-  build-kernel-opace2pro:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP-ACE-2-PRO"
-      soc: "kalama"
-      branch: "oneplus/sm8550"
-      manifest: "oneplus_ace2pro_v.xml"
-      android_version: "android13"
-      kernel_version: "5.15"
-  build-kernel-opace5:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP-ACE-5"
-      soc: "pineapple"
-      branch: "oneplus/sm8650"
-      manifest: "oneplus_ace5.xml"
-      android_version: "android14"
-      kernel_version: "6.1"
-  build-kernel-op10t:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP10t"
-      soc: "waipio"
-      branch: "oneplus/sm8475"
-      manifest: "oneplus_10t_v.xml"
-      android_version: "android12"
-      kernel_version: "5.10"
-  build-kernel-op10pro:
-    uses: ./.github/workflows/build.yml
-    secrets: inherit
-    with:
-      model: "OP10pro"
-      soc: "waipio"
-      branch: "oneplus/sm8450"
-      manifest: "oneplus_10_pro_v.xml"
-      android_version: "android12"
-      kernel_version: "5.10"
-
-  trigger-release:
-    runs-on: ubuntu-latest
-    needs:
-        - build-kernel-op11
-        - build-kernel-op11r
-        - build-kernel-op12
-        - build-kernel-op13r
-        - build-kernel-opnord4
-        - build-kernel-opopen
-        - build-kernel-opace2
-        - build-kernel-opace2pro
-        - build-kernel-opace5
-        - build-kernel-op10t
-        - build-kernel-op10pro
-    if: ${{ inputs.make_release }}
-    env:
-      REPO_OWNER: TheWildJames
-      REPO_NAME: OnePlus_KernelSU_SUSFS
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_NAME: "*TEST BUILD* OnePlus Kernels With KernelSU Next & SUSFS v1.5.5 *TEST BUILD*"
-      RELEASE_NOTES: |
-        This release contains KernelSU Next and SUSFS v1.5.5
-        
-        Module: 
-        -> https://github.com/sidex15/ksu_module_susfs
-        
-        Non-Official Managers:
-        -> https://github.com/KernelSU-Next/KernelSU-Next
-        
-        Features:
-        [+] KernelSU-Next
-        [+] SUSFS v1.5.5
-        [+] Wireguard Support
-        [+] Maphide LineageOS Detections
-        [+] Futile Maphide for jit-zygote-cache Detections
-        [+] Magic Mount Support
-
-    steps:
-      # Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Get the Latest Tag from GitHub
-      - name: Generate and Create New Tag
-        run: |
-            # Fetch the latest tag from GitHub (this is the latest tag based on the GitHub API)
-            LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
-            if [ -z "$LATEST_TAG" ]; then
-              LATEST_TAG="v1.5.5-r0"  # Default to v1.5.3-0 if no tag exists
-            fi
-            
-            # Increment the suffix (e.g., v1.5.3-0 becomes v1.5.3-1)
-            NEW_TAG=$(echo "$LATEST_TAG" | awk -F'-r' '{suffix=$2; if (!suffix) suffix=0; suffix++; printf "%s-r%d", $1, suffix}')
-            
-            # Output the new tag to be used
-            echo "New tag: $NEW_TAG"
-            
-            # Set the new tag as an environment variable to be used in later steps
-            echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
-            
-            # Create the tag in the repository
-            git tag $NEW_TAG
-            git push origin $NEW_TAG
-            
-      # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./downloaded-artifacts
-
-      # Create GitHub Release and upload files if make_release is true
-      - name: Create GitHub Release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ env.NEW_TAG }}  # Use the generated tag for the release
-          prerelease: true  # Mark the release as a pre-release
-          release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
-          body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Assets Dynamically
-        run: |
-          # Loop through all files in the downloaded-artifacts directory
-          for file in ./downloaded-artifacts/kernel-*/*; do
-              # Skip directories
-              if [ -d "$file" ]; then
-                  continue
-              fi
-
-              # Upload the file to the GitHub release
-              echo "Uploading $file..."
-              gh release upload ${{ env.NEW_TAG }} "$file"
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEW_TAG: ${{ env.NEW_TAG }}
-
-      # Display Files Uploaded
-      - name: Display Files Uploaded
-        run: |
-          echo "GitHub release created with the following files:"
-          ls ./downloaded-artifacts/**/*
